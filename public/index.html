@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Localhost Projects</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      position: relative;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      margin-bottom: 10px;
+    }
+
+    a, button {
+      display: inline-block;
+      padding: 8px 16px;
+      font-size: 14px;
+      text-decoration: none;
+      color: #fff;
+      background-color: #3498db;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      margin-right: 10px;
+    }
+
+    a:hover, button:hover {
+      background-color: #2980b9;
+    }
+
+    #addMicroservice,
+    #deleteMicroserviceBtn {
+        margin-left: 10px; /* Add margin between buttons */
+    }
+
+    #buttonContainer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex; /* Use flex container to position buttons */
+    }
+
+    #deleteMicroserviceBtn {
+      background-color: red; /* Set background color to red */
+      color: white; /* Set text color to white for better visibility */
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* Styles for the toggle switch */
+    .switch {
+      display: inline-block;
+      position: relative;
+      height: 20px;
+      width: 40px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* Rounded slider */
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc; /* Grey background color when toggled off */
+      -webkit-transition: .4s;
+      transition: .4s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    /* Rounded sliders (additional style for the round shape) */
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #4CAF50; /* Green background color when toggled on */
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #4CAF50; /* Green shadow color when toggled on */
+    }
+
+    input:checked + .slider:before {
+      -webkit-transform: translateX(20px);
+      -ms-transform: translateX(20px);
+      transform: translateX(20px);
+    }
+
+    /* Additional styling for the label */
+    #productionModeLabel {
+      margin-left: 5px;
+      color: #4CAF50; /* Green text color when toggled on */
+    }
+  </style>
+</head>
+<body>
+  <div id="buttonContainer">
+    <button id="addMicroservice" onclick="addMicroservice()">Add Microservice</button>
+    <button id="deleteMicroserviceBtn" onclick="toggleDeleteMode()">Delete Microservice</button>
+    <label class="switch">
+        <input type="checkbox" id="productionToggle">
+        <span class="slider round"></span>
+      </label>
+      <span id="productionModeLabel">Production Mode</span>
+  </div> 
+
+  <h1>Localhost Projects</h1>
+  <ul id="projects-list"></ul>
+  <button id="getCollectionsButton">Get Collections</button>
+
+
+  <script>
+    const clientId = '65ae9f8a0a21b787ee3c9745'; // Replace with a valid client identifier
+    const apiUrl = 'http://localhost:5000/api/microservices';
+
+    let deleteMode = false; // Flag to indicate if in delete mode
+    let productionMode = false; // Flag to indicate production mode
+
+const toggleDeleteMode = () => {
+  deleteMode = !deleteMode;
+  const deleteMicroserviceBtn = document.getElementById('deleteMicroserviceBtn');
+  deleteMicroserviceBtn.style.backgroundColor = deleteMode ? 'darkred' : 'red'; // Change button color based on deleteMode
+  alert(`Delete mode is ${deleteMode ? 'on' : 'off'}. Click on a microservice to delete it.`);
+};
+
+// Example function for toggling production mode
+const toggleProductionMode = () => {
+      productionMode = !productionMode;
+      const productionModeLabel = document.getElementById('productionModeLabel');
+      productionModeLabel.style.color = productionMode ? '#4CAF50' : '#333'; // Change text color based on productionMode
+      alert(`Production mode is ${productionMode ? 'on' : 'off'}.`);
+      fetchMicroservices();
+    };
+
+    // Attach event listener to the toggle switch
+    document.getElementById('productionToggle').addEventListener('change', toggleProductionMode);
+
+    const fetchMicroservices = () => {
+  // Fetch the list of microservices and dynamically create links
+  fetch(`${apiUrl}?production=${productionMode}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Client-ID': clientId,
+    },
+  })
+    .then(response => response.json())
+    .then(data => {
+      const projectsList = document.getElementById('projects-list');
+      projectsList.innerHTML = ''; // Clear existing microservices
+
+      data.forEach(microservice => {
+        // Check if the microservice should be shown based on the production mode toggle
+        if (microservice.production === productionMode) {
+          const listItem = document.createElement('li');
+          const link = document.createElement('a');
+
+          link.textContent = microservice.name;
+          link.href = microservice.url;
+          link.setAttribute('data-id', microservice._id);
+          link.classList.add('microservice-item');
+
+          listItem.classList.add('microservice-item');
+
+          listItem.appendChild(link);
+          projectsList.appendChild(listItem);
+        }
+      });
+
+      console.log(data);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error fetching microservices. Check the console for details.');
+    });
+};
+
+document.addEventListener('click', (event) => {
+      const clickedElement = event.target;
+
+      console.log('Clicked element:', clickedElement);
+      console.log('Class names:', clickedElement.classList);
+
+      if (deleteMode && clickedElement.classList.contains('microservice-item')) {
+        console.log('Entered if statement');
+        event.preventDefault(); // Prevent the default behavior
+        const microserviceId = clickedElement.getAttribute('data-id');
+
+        console.log('Microservice ID:', microserviceId);
+
+        // Send a DELETE request to the backend API
+        fetch(`http://localhost:5000/api/microservices/${microserviceId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Client-ID': clientId,
+          },
+        })
+          .then(response => response.json())
+          .then(data => {
+            console.log(data.message);
+            // Optionally, update the UI to remove the deleted microservice
+            clickedElement.remove();
+          })
+          .catch(error => {
+            console.error('Error deleting microservice:', error);
+            alert('Error deleting microservice. Check the console for details.');
+          });
+      }
+    });
+
+    // Fetch microservices initially
+    fetchMicroservices();
+
+    const addMicroservice = () => {
+      const name = prompt('Enter microservice name:');
+      const url = prompt('Enter microservice URL:');
+
+      if (name && url) {
+        const postData = {
+          name: name,
+          url: url,
+          client: clientId, // Include the client ID
+          production: productionMode, // Get the current state of the productionMode
+        };
+
+        console.log('Sending POST request with data:', postData);
+
+        fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Client-ID': clientId,
+          },
+          body: JSON.stringify(postData),
+        })
+          .then(response => response.json())
+          .then(data => {
+            // Handle the response data from the backend
+            console.log(data);
+            alert('Microservice added successfully. Check the console for details.');
+
+            // Refresh microservices list after adding a new microservice
+            fetchMicroservices();
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Error adding microservice. Check the console for details.');
+          });
+      }
+    };
+
+    // Fetch the list of projects and dynamically create links
+    // fetch('/api/projects')
+    //   .then(response => response.json())
+    //   .then(projects => {
+    //     const projectsList = document.getElementById('projects-list');
+
+    //     projects.forEach(project => {
+    //       const listItem = document.createElement('li');
+    //       const link = document.createElement('a');
+
+    //       link.textContent = project.name;
+    //       link.href = project.url;
+
+    //       listItem.appendChild(link);
+    //       projectsList.appendChild(listItem);
+    //     });
+    //   })
+    //   .catch(error => console.error('Error fetching projects:', error));
+
+
+    //   fetch(apiUrl + `?production=${!productionMode}`,{
+    //     method: 'GET',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       'X-Client-ID': clientId,
+    //     },
+    //   })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         const projectsList = document.getElementById('projects-list'); 
+    //         projectsList.innerHTML = ''; // Clear existing microservices
+
+    //         data.forEach(microservice => {
+    //             const listItem = document.createElement('li');
+    //             const link = document.createElement('a');
+
+    //             link.textContent = microservice.name;
+    //             link.href = microservice.url;
+    //             link.setAttribute('data-id', microservice._id);
+    //             link.classList.add('microservice-item');
+
+    //             listItem.classList.add('microservice-item');
+
+    //             listItem.appendChild(link);
+    //             projectsList.appendChild(listItem);
+    //         })
+    //       // Handle the response data from the backend
+    //       console.log(data);
+    //     //   alert('Collections retrieved successfully. Check the console for details.');
+    //     })
+    //     .catch(error => {
+    //       console.error('Error:', error);
+    //       alert('Error fetching collections. Check the console for details.');
+    //     });
+
+    
+  </script>
+</body>
+</html>
