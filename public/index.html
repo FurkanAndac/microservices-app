@@ -41,28 +41,30 @@
       border-radius: 4px;
       cursor: pointer;
       text-align: center;
-      margin-right: 10px;
+      margin-right: 10px; /* Add margin between buttons on desktop */
     }
 
     a:hover, button:hover {
       background-color: #2980b9;
     }
 
-    #addMicroservice,
-    #deleteMicroserviceBtn {
-        margin-left: 10px; /* Add margin between buttons */
-    }
-
     #buttonContainer {
       position: absolute;
       top: 10px;
       right: 10px;
-      display: flex; /* Use flex container to position buttons */
+      display: flex;
+      /* Stack buttons in a column on small screens */
+      flex-direction: column;
+      align-items: flex-end; /* Align buttons to the right on small screens */
+    }
+
+    #buttonContainer a, #buttonContainer button {
+      margin-bottom: 10px; /* Add space between buttons on mobile */
     }
 
     #deleteMicroserviceBtn {
-      background-color: red; /* Set background color to red */
-      color: white; /* Set text color to white for better visibility */
+      background-color: red;
+      color: white;
     }
 
     button {
@@ -77,15 +79,9 @@
       position: relative;
       height: 20px;
       width: 40px;
+      margin-top: 10px; /* Add space between toggle switch and buttons on small screens */
     }
 
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    /* Rounded slider */
     .slider {
       position: absolute;
       cursor: pointer;
@@ -93,7 +89,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: #ccc; /* Grey background color when toggled off */
+      background-color: #ccc;
       -webkit-transition: .4s;
       transition: .4s;
       border-radius: 20px;
@@ -112,7 +108,6 @@
       border-radius: 50%;
     }
 
-    /* Rounded sliders (additional style for the round shape) */
     .slider.round {
       border-radius: 34px;
     }
@@ -122,11 +117,11 @@
     }
 
     input:checked + .slider {
-      background-color: #4CAF50; /* Green background color when toggled on */
+      background-color: #4CAF50;
     }
 
     input:focus + .slider {
-      box-shadow: 0 0 1px #4CAF50; /* Green shadow color when toggled on */
+      box-shadow: 0 0 1px #4CAF50;
     }
 
     input:checked + .slider:before {
@@ -135,10 +130,20 @@
       transform: translateX(20px);
     }
 
-    /* Additional styling for the label */
     #productionModeLabel {
       margin-left: 5px;
-      color: #4CAF50; /* Green text color when toggled on */
+      color: #4CAF50;
+    }
+
+    /* Media query for desktop screens */
+    @media (min-width: 768px) {
+      #buttonContainer {
+        flex-direction: row; /* Display buttons side by side on desktop */
+      }
+
+      #buttonContainer a, #buttonContainer button {
+        margin-bottom: 0; /* Remove margin between buttons on desktop */
+      }
     }
   </style>
 </head>
@@ -153,10 +158,8 @@
       <span id="productionModeLabel">Production Mode</span>
   </div> 
 
-  <h1>Localhost Projects</h1>
+  <h1>Microservice Projects</h1>
   <ul id="projects-list"></ul>
-  <button id="getCollectionsButton">Get Collections</button>
-
 
   <script>
     const clientId = '65ae9f8a0a21b787ee3c9745'; // Replace with a valid client identifier
@@ -164,6 +167,26 @@
 
     let deleteMode = false; // Flag to indicate if in delete mode
     let productionMode = false; // Flag to indicate production mode
+
+    // Function to handle microservice statuses received from backend
+    const handleMicroserviceStatuses = async (microserviceLiveResults) => {
+      const projectsList = document.getElementById('projects-list');
+
+      microserviceLiveResults.forEach((result) => {
+        const { url, microserviceLive } = result;
+        const linkElements = document.querySelectorAll(`a[href="${url.href}"]`);
+
+        linkElements.forEach((linkElement) => {
+          if (microserviceLive) {
+            // Set the color to indicate that the microservice is live
+            linkElement.style.color = 'green';
+          } else {
+            // Set the color to indicate that the microservice is not live
+            linkElement.style.color = 'red';
+          }
+        });
+      });
+    };
 
 const toggleDeleteMode = () => {
   deleteMode = !deleteMode;
@@ -174,15 +197,182 @@ const toggleDeleteMode = () => {
 
 // Example function for toggling production mode
 const toggleProductionMode = () => {
-      productionMode = !productionMode;
-      const productionModeLabel = document.getElementById('productionModeLabel');
-      productionModeLabel.style.color = productionMode ? '#4CAF50' : '#333'; // Change text color based on productionMode
-      alert(`Production mode is ${productionMode ? 'on' : 'off'}.`);
-      fetchMicroservices();
-    };
+  productionMode = !productionMode;
+  const productionModeLabel = document.getElementById('productionModeLabel');
+  productionModeLabel.style.color = productionMode ? '#4CAF50' : '#333'; // Change text color based on productionMode
+  alert(`Production mode is ${productionMode ? 'on' : 'off'}.`);
+  fetchMicroservices();
+};
+
+// Function to fetch frontend ping results
+const fetchFrontendPing = () => {
+  currentMicroservices = [];
+
+  // Fetch frontend ping results and microservices concurrently
+  Promise.all([
+    fetch('http://localhost:5000/api/frontend-ping', { headers: { 'X-Client-Id': clientId } }),
+    fetch('http://localhost:5000/api/microservices', { headers: { 'X-Client-Id': clientId } })
+  ])
+    .then(([pingResponse, microservicesResponse]) => Promise.all([pingResponse.json(), microservicesResponse.json()]))
+    .then(([pingData, microservicesData]) => {
+      console.log('Frontend Ping Results:', pingData);
+      console.log('Microservices:', microservicesData);
+      console.log('Production Mode:', productionMode);
+
+      // Check if pingData is an array
+      if (!pingData || !pingData.microserviceLiveResults || !Array.isArray(pingData.microserviceLiveResults)) {
+        console.error('Error: Invalid frontend ping results structure.');
+        console.error('Received data:', pingData);
+        return;
+      }
+
+     // Filter and add microservices to currentMicroservices based on production mode
+microservicesData.forEach(element => {
+  // Check if the microservice's production mode matches the desired mode
+  if (element.production === productionMode) {
+    currentMicroservices.push(element);
+  }
+});
+
+console.log('Current Microservices:', currentMicroservices);
+
+      console.log('Current Microservices:', currentMicroservices);
+
+      // Iterate through each microservice result
+pingData.microserviceLiveResults.forEach(async (result, index) => {
+  let currentMicroservice = currentMicroservices.find(microservice => microservice.url === result.url);
+
+  console.log('result:', result);
+  console.log('result.url:', result.url);
+  console.log('currentMicroservice:', currentMicroservice);
+
+  let buttonIndex = index + 1;
+
+  // Skip the index if currentMicroservice is undefined
+  if (!currentMicroservice) {
+    console.warn(`Skipping index ${buttonIndex} because currentMicroservice is undefined.`);
+    return;
+  }
+
+  // Create a selector based on microserviceId
+  const buttonSelector = `#projects-list .microservice-item[data-id="${currentMicroservice._id}"]`;
+
+  // Find the button corresponding to the microservice
+  const button = document.querySelector(buttonSelector);
+
+  // Check if the button is found
+  if (button) {
+    // Check if the microservice is live
+    const microserviceLive = result.microserviceLive;
+
+    // Change button color based on microserviceLive value
+    button.style.backgroundColor = microserviceLive ? 'green' : 'red';
+    button.style.color = 'white'; // Adjust text color as needed
+
+    // Use microserviceId as needed
+    const microserviceId = currentMicroservice._id;
+    console.log('Microservice ID:', microserviceId);
+  } else {
+    console.error(`Button not found for microservice with _id ${currentMicroservice._id}.`);
+  }
+});
+
+
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
+      alert('Error fetching data. Check the console for details.');
+    });
+};
+
+// Call fetchFrontendPing every 15 seconds
+setInterval(fetchFrontendPing, 15000);
+
 
     // Attach event listener to the toggle switch
     document.getElementById('productionToggle').addEventListener('change', toggleProductionMode);
+
+    const initiateFrontendPing = () => {
+  setInterval(async () => {
+    try {
+      // Assume microserviceLive is a boolean representing the current status
+      const microserviceLive = true; // Replace with your actual logic to determine the status
+
+      const response = await fetch('http://localhost:5000/api/frontend-ping', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-Id': clientId,
+        },
+        body: JSON.stringify({ microserviceLive }),
+      });
+      console.log("test: "+response.status)
+      if (!response.ok) {
+        throw new Error(`Failed to ping frontend: ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      console.log('Received response from frontend ping:', responseData);
+    } catch (error) {
+      console.error('Error pinging frontend:', error.message);
+    }
+  }, 15000); // 15 seconds interval
+};
+
+// Example usage:
+// initiateFrontendPing();
+
+//     const checkButtonStatus = async () => {
+//   console.log('Checking button status...');
+
+//   try {
+//     const response = await fetch('http://localhost:5000/api/microservice-response', {
+//       headers: { 'X-Client-Id': clientId },
+//     });
+//     const data = await response.json();
+//     console.log(data);
+
+//     const buttonsInMicroservices = document.querySelectorAll('#projects-list .microservice-item');
+
+//     buttonsInMicroservices.forEach(async (button) => {
+//       const linkElement = button.querySelector('a');
+//       if (!linkElement) {
+//         console.error('Link element not found.');
+//         return;
+//       }
+
+//       const url = linkElement.getAttribute('href');
+//       const matchingResponse = data.find((item) => item.url.includes(url));
+//       console.log(url)
+
+//       if (matchingResponse && matchingResponse.responseText !== '') {
+//         // Set button color to blue if responseText is not empty
+//         button.style.backgroundColor = 'blue';
+//         button.style.color = 'white';
+//       } else {
+//         // Set button color to red if responseText is empty or ping fails
+//         try {
+//           const pingResponse = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+//           if (!pingResponse.ok) {
+//             button.style.backgroundColor = 'red';
+//             button.style.color = 'white';
+//           } else {
+//             // Set to default color if ping is successful
+//             button.style.backgroundColor = '#3498db';
+//             button.style.color = 'white';
+//           }
+//         } catch (error) {
+//           // Error in ping
+//           console.error(`Error pinging microservice at ${url}:`, error);
+//           button.style.backgroundColor = 'red';
+//           button.style.color = 'white';
+//         }
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Error fetching button status:', error);
+//   }
+// };
 
     const fetchMicroservices = () => {
   // Fetch the list of microservices and dynamically create links
@@ -195,26 +385,34 @@ const toggleProductionMode = () => {
   })
     .then(response => response.json())
     .then(data => {
-      const projectsList = document.getElementById('projects-list');
-      projectsList.innerHTML = ''; // Clear existing microservices
+        const projectsList = document.getElementById('projects-list');
+projectsList.innerHTML = ''; // Clear existing microservices
 
-      data.forEach(microservice => {
-        // Check if the microservice should be shown based on the production mode toggle
-        if (microservice.production === productionMode) {
-          const listItem = document.createElement('li');
-          const link = document.createElement('a');
+data.forEach(microservice => {
+  console.log(microservice);
+  // Check if the microservice should be shown based on the production mode toggle
+  if (microservice.production === productionMode) {
+    const listItem = document.createElement('li');
+    const link = document.createElement('a');
 
-          link.textContent = microservice.name;
-          link.href = microservice.url;
-          link.setAttribute('data-id', microservice._id);
-          link.classList.add('microservice-item');
+    link.textContent = microservice.name;
+    link.href = microservice.url.startsWith('http') || microservice.url.startsWith('https')
+  ? microservice.url
+  : 'http://' + microservice.url;
+      console.log(link.href);
 
-          listItem.classList.add('microservice-item');
+    link.setAttribute('data-id', microservice._id);
+    link.classList.add('microservice-item');
 
-          listItem.appendChild(link);
-          projectsList.appendChild(listItem);
-        }
-      });
+    listItem.classList.add('microservice-item');
+
+    listItem.appendChild(link);
+    projectsList.appendChild(listItem);
+  }
+});
+
+    //   checkButtonStatus();
+      console.log('fetchMicroservices executed'); // Add this line for debugging
 
       console.log(data);
     })
@@ -223,6 +421,26 @@ const toggleProductionMode = () => {
       alert('Error fetching microservices. Check the console for details.');
     });
 };
+fetchMicroservices();
+
+// Fetch the microservice statuses periodically
+const fetchMicroserviceStatuses = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/frontend-ping', {
+          headers: { 'X-Client-Id': clientId },
+        });
+        const data = await response.json();
+
+        // Handle the microservice statuses received from the backend
+        handleMicroserviceStatuses(data.microserviceLiveResults);
+      } catch (error) {
+        console.error('Error fetching microservice statuses:', error);
+      }
+    };
+
+    // Call the function when the page loads
+    fetchMicroserviceStatuses();
+    setInterval(fetchMicroserviceStatuses, 15000);
 
 document.addEventListener('click', (event) => {
       const clickedElement = event.target;
@@ -262,42 +480,56 @@ document.addEventListener('click', (event) => {
     fetchMicroservices();
 
     const addMicroservice = () => {
-      const name = prompt('Enter microservice name:');
-      const url = prompt('Enter microservice URL:');
+  const name = prompt('Enter microservice name:');
+  let url = prompt('Enter microservice URL:');
 
-      if (name && url) {
-        const postData = {
-          name: name,
-          url: url,
-          client: clientId, // Include the client ID
-          production: productionMode, // Get the current state of the productionMode
-        };
+  // Check if the URL starts with 'http://' or 'https://'
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    // If it doesn't start with either, add 'http://'
+    url = 'http://' + url;
+  }
 
-        console.log('Sending POST request with data:', postData);
-
-        fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Client-ID': clientId,
-          },
-          body: JSON.stringify(postData),
-        })
-          .then(response => response.json())
-          .then(data => {
-            // Handle the response data from the backend
-            console.log(data);
-            alert('Microservice added successfully. Check the console for details.');
-
-            // Refresh microservices list after adding a new microservice
-            fetchMicroservices();
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            alert('Error adding microservice. Check the console for details.');
-          });
-      }
+  if (name && url) {
+    const postData = {
+      name: name,
+      url: url,
+      client: clientId, // Include the client ID
+      production: productionMode, // Get the current state of the productionMode
     };
+
+    console.log('Sending POST request with data:', postData);
+
+    fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-ID': clientId,
+      },
+      body: JSON.stringify(postData),
+    })
+      .then(response => response.json())
+      .then(data => {
+        // Handle the response data from the backend
+        console.log("test1: "+Object.entries(data));
+        alert('Microservice added successfully. Check the console for details.');
+
+        // Refresh microservices list after adding a new microservice
+        fetchMicroservices();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding microservice. Check the console for details.');
+      });
+  }
+};
+
+
+
+// ...
+
+// Call the function when the page loads
+// checkButtonStatus();
+// setInterval(checkButtonStatus, 15000);
 
     // Fetch the list of projects and dynamically create links
     // fetch('/api/projects')
@@ -354,7 +586,8 @@ document.addEventListener('click', (event) => {
     //       alert('Error fetching collections. Check the console for details.');
     //     });
 
-    
+    fetchFrontendPing();
+
   </script>
 </body>
 </html>
