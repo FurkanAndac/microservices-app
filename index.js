@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 
 const app = express();
-const port = 8080;
+const port = 8000;
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -23,6 +23,6 @@ app.get('/api/projects', (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+app.listen(process.env.PORT || 8080, () => {
+  console.log(`Server is running on http://localhost:${process.env.PORT || 8080}`);
 });
