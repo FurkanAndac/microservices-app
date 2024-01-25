@@ -163,7 +163,10 @@
 
   <script>
     const clientId = '65ae9f8a0a21b787ee3c9745'; // Replace with a valid client identifier
-    const apiUrl = 'http://localhost:5000/api/microservices';
+    const apiUrlgetMicroservices = 'https://microservices-backend-e5ae0dbc81b5.herokuapp.com/api/microservices';
+    const apiUrl = 'https://microservices-backend-e5ae0dbc81b5.herokuapp.com';
+    // const apiUrlgetMicroservices = 'http://localhost:5000/api/microservices'
+    // const apiUrl = 'http://localhost:5000'
 
     let deleteMode = false; // Flag to indicate if in delete mode
     let productionMode = false; // Flag to indicate production mode
@@ -210,8 +213,8 @@ const fetchFrontendPing = () => {
 
   // Fetch frontend ping results and microservices concurrently
   Promise.all([
-    fetch('http://localhost:5000/api/frontend-ping', { headers: { 'X-Client-Id': clientId } }),
-    fetch('http://localhost:5000/api/microservices', { headers: { 'X-Client-Id': clientId } })
+    fetch(apiUrl +'/api/frontend-ping', { headers: { 'X-Client-Id': clientId } }),
+    fetch(apiUrl+'/api/microservices', { headers: { 'X-Client-Id': clientId } })
   ])
     .then(([pingResponse, microservicesResponse]) => Promise.all([pingResponse.json(), microservicesResponse.json()]))
     .then(([pingData, microservicesData]) => {
@@ -294,20 +297,28 @@ setInterval(fetchFrontendPing, 15000);
 
     const fetchMicroservices = () => {
   // Fetch the list of microservices and dynamically create links
-  fetch(`${apiUrl}?production=${productionMode}`, {
+  fetch(`${apiUrlgetMicroservices}?production=${productionMode}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
       'X-Client-ID': clientId,
     },
   })
-    .then(response => response.json())
+  .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
+      console.log(clientId)
+      console.log('Data from API:', data);
+
         const projectsList = document.getElementById('projects-list');
 projectsList.innerHTML = ''; // Clear existing microservices
 
 data.forEach(microservice => {
-  // console.log(microservice);
+  console.log(microservice);
   // Check if the microservice should be shown based on the production mode toggle
   if (microservice.production === productionMode) {
     const listItem = document.createElement('li');
@@ -317,7 +328,7 @@ data.forEach(microservice => {
     link.href = microservice.url.startsWith('http') || microservice.url.startsWith('https')
   ? microservice.url
   : 'http://' + microservice.url;
-      // console.log(link.href);
+      console.log(link.href);
 
     link.setAttribute('data-id', microservice._id);
     link.classList.add('microservice-item');
@@ -354,7 +365,7 @@ document.addEventListener('click', (event) => {
         // console.log('Microservice ID:', microserviceId);
 
         // Send a DELETE request to the backend API
-        fetch(`http://localhost:5000/api/microservices/${microserviceId}`, {
+        fetch(`${apiUrl}/api/microservices/${microserviceId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -397,7 +408,7 @@ document.addEventListener('click', (event) => {
 
     // console.log('Sending POST request with data:', postData);
 
-    fetch(apiUrl, {
+    fetch(apiUrlgetMicroservices, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
