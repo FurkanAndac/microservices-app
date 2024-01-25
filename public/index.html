@@ -215,9 +215,9 @@ const fetchFrontendPing = () => {
   ])
     .then(([pingResponse, microservicesResponse]) => Promise.all([pingResponse.json(), microservicesResponse.json()]))
     .then(([pingData, microservicesData]) => {
-      console.log('Frontend Ping Results:', pingData);
-      console.log('Microservices:', microservicesData);
-      console.log('Production Mode:', productionMode);
+      // console.log('Frontend Ping Results:', pingData);
+      // console.log('Microservices:', microservicesData);
+      // console.log('Production Mode:', productionMode);
 
       // Check if pingData is an array
       if (!pingData || !pingData.microserviceLiveResults || !Array.isArray(pingData.microserviceLiveResults)) {
@@ -234,17 +234,17 @@ microservicesData.forEach(element => {
   }
 });
 
-console.log('Current Microservices:', currentMicroservices);
+// console.log('Current Microservices:', currentMicroservices);
 
-      console.log('Current Microservices:', currentMicroservices);
+  // console.log('Current Microservices:', currentMicroservices);
 
       // Iterate through each microservice result
 pingData.microserviceLiveResults.forEach(async (result, index) => {
   let currentMicroservice = currentMicroservices.find(microservice => microservice.url === result.url);
 
-  console.log('result:', result);
-  console.log('result.url:', result.url);
-  console.log('currentMicroservice:', currentMicroservice);
+  // console.log('result:', result);
+  // console.log('result.url:', result.url);
+  // console.log('currentMicroservice:', currentMicroservice);
 
   let buttonIndex = index + 1;
 
@@ -271,7 +271,7 @@ pingData.microserviceLiveResults.forEach(async (result, index) => {
 
     // Use microserviceId as needed
     const microserviceId = currentMicroservice._id;
-    console.log('Microservice ID:', microserviceId);
+    // console.log('Microservice ID:', microserviceId);
   } else {
     console.error(`Button not found for microservice with _id ${currentMicroservice._id}.`);
   }
@@ -292,88 +292,6 @@ setInterval(fetchFrontendPing, 15000);
     // Attach event listener to the toggle switch
     document.getElementById('productionToggle').addEventListener('change', toggleProductionMode);
 
-    const initiateFrontendPing = () => {
-  setInterval(async () => {
-    try {
-      // Assume microserviceLive is a boolean representing the current status
-      const microserviceLive = true; // Replace with your actual logic to determine the status
-
-      const response = await fetch('http://localhost:5000/api/frontend-ping', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Client-Id': clientId,
-        },
-        body: JSON.stringify({ microserviceLive }),
-      });
-      console.log("test: "+response.status)
-      if (!response.ok) {
-        throw new Error(`Failed to ping frontend: ${response.statusText}`);
-      }
-
-      const responseData = await response.json();
-      console.log('Received response from frontend ping:', responseData);
-    } catch (error) {
-      console.error('Error pinging frontend:', error.message);
-    }
-  }, 15000); // 15 seconds interval
-};
-
-// Example usage:
-// initiateFrontendPing();
-
-//     const checkButtonStatus = async () => {
-//   console.log('Checking button status...');
-
-//   try {
-//     const response = await fetch('http://localhost:5000/api/microservice-response', {
-//       headers: { 'X-Client-Id': clientId },
-//     });
-//     const data = await response.json();
-//     console.log(data);
-
-//     const buttonsInMicroservices = document.querySelectorAll('#projects-list .microservice-item');
-
-//     buttonsInMicroservices.forEach(async (button) => {
-//       const linkElement = button.querySelector('a');
-//       if (!linkElement) {
-//         console.error('Link element not found.');
-//         return;
-//       }
-
-//       const url = linkElement.getAttribute('href');
-//       const matchingResponse = data.find((item) => item.url.includes(url));
-//       console.log(url)
-
-//       if (matchingResponse && matchingResponse.responseText !== '') {
-//         // Set button color to blue if responseText is not empty
-//         button.style.backgroundColor = 'blue';
-//         button.style.color = 'white';
-//       } else {
-//         // Set button color to red if responseText is empty or ping fails
-//         try {
-//           const pingResponse = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
-//           if (!pingResponse.ok) {
-//             button.style.backgroundColor = 'red';
-//             button.style.color = 'white';
-//           } else {
-//             // Set to default color if ping is successful
-//             button.style.backgroundColor = '#3498db';
-//             button.style.color = 'white';
-//           }
-//         } catch (error) {
-//           // Error in ping
-//           console.error(`Error pinging microservice at ${url}:`, error);
-//           button.style.backgroundColor = 'red';
-//           button.style.color = 'white';
-//         }
-//       }
-//     });
-//   } catch (error) {
-//     console.error('Error fetching button status:', error);
-//   }
-// };
-
     const fetchMicroservices = () => {
   // Fetch the list of microservices and dynamically create links
   fetch(`${apiUrl}?production=${productionMode}`, {
@@ -389,7 +307,7 @@ setInterval(fetchFrontendPing, 15000);
 projectsList.innerHTML = ''; // Clear existing microservices
 
 data.forEach(microservice => {
-  console.log(microservice);
+  // console.log(microservice);
   // Check if the microservice should be shown based on the production mode toggle
   if (microservice.production === productionMode) {
     const listItem = document.createElement('li');
@@ -399,7 +317,7 @@ data.forEach(microservice => {
     link.href = microservice.url.startsWith('http') || microservice.url.startsWith('https')
   ? microservice.url
   : 'http://' + microservice.url;
-      console.log(link.href);
+      // console.log(link.href);
 
     link.setAttribute('data-id', microservice._id);
     link.classList.add('microservice-item');
@@ -410,11 +328,9 @@ data.forEach(microservice => {
     projectsList.appendChild(listItem);
   }
 });
+      // console.log('fetchMicroservices executed'); // Add this line for debugging
 
-    //   checkButtonStatus();
-      console.log('fetchMicroservices executed'); // Add this line for debugging
-
-      console.log(data);
+      // console.log(data);
     })
     .catch(error => {
       console.error('Error:', error);
@@ -423,24 +339,6 @@ data.forEach(microservice => {
 };
 fetchMicroservices();
 
-// Fetch the microservice statuses periodically
-const fetchMicroserviceStatuses = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/frontend-ping', {
-          headers: { 'X-Client-Id': clientId },
-        });
-        const data = await response.json();
-
-        // Handle the microservice statuses received from the backend
-        handleMicroserviceStatuses(data.microserviceLiveResults);
-      } catch (error) {
-        console.error('Error fetching microservice statuses:', error);
-      }
-    };
-
-    // Call the function when the page loads
-    fetchMicroserviceStatuses();
-    setInterval(fetchMicroserviceStatuses, 15000);
 
 document.addEventListener('click', (event) => {
       const clickedElement = event.target;
@@ -453,7 +351,7 @@ document.addEventListener('click', (event) => {
         event.preventDefault(); // Prevent the default behavior
         const microserviceId = clickedElement.getAttribute('data-id');
 
-        console.log('Microservice ID:', microserviceId);
+        // console.log('Microservice ID:', microserviceId);
 
         // Send a DELETE request to the backend API
         fetch(`http://localhost:5000/api/microservices/${microserviceId}`, {
@@ -465,7 +363,7 @@ document.addEventListener('click', (event) => {
         })
           .then(response => response.json())
           .then(data => {
-            console.log(data.message);
+            // console.log(data.message);
             // Optionally, update the UI to remove the deleted microservice
             clickedElement.remove();
           })
@@ -497,7 +395,7 @@ document.addEventListener('click', (event) => {
       production: productionMode, // Get the current state of the productionMode
     };
 
-    console.log('Sending POST request with data:', postData);
+    // console.log('Sending POST request with data:', postData);
 
     fetch(apiUrl, {
       method: 'POST',
@@ -510,7 +408,7 @@ document.addEventListener('click', (event) => {
       .then(response => response.json())
       .then(data => {
         // Handle the response data from the backend
-        console.log("test1: "+Object.entries(data));
+        // console.log("test1: "+Object.entries(data));
         alert('Microservice added successfully. Check the console for details.');
 
         // Refresh microservices list after adding a new microservice
@@ -522,71 +420,6 @@ document.addEventListener('click', (event) => {
       });
   }
 };
-
-
-
-// ...
-
-// Call the function when the page loads
-// checkButtonStatus();
-// setInterval(checkButtonStatus, 15000);
-
-    // Fetch the list of projects and dynamically create links
-    // fetch('/api/projects')
-    //   .then(response => response.json())
-    //   .then(projects => {
-    //     const projectsList = document.getElementById('projects-list');
-
-    //     projects.forEach(project => {
-    //       const listItem = document.createElement('li');
-    //       const link = document.createElement('a');
-
-    //       link.textContent = project.name;
-    //       link.href = project.url;
-
-    //       listItem.appendChild(link);
-    //       projectsList.appendChild(listItem);
-    //     });
-    //   })
-    //   .catch(error => console.error('Error fetching projects:', error));
-
-
-    //   fetch(apiUrl + `?production=${!productionMode}`,{
-    //     method: 'GET',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //       'X-Client-ID': clientId,
-    //     },
-    //   })
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         const projectsList = document.getElementById('projects-list'); 
-    //         projectsList.innerHTML = ''; // Clear existing microservices
-
-    //         data.forEach(microservice => {
-    //             const listItem = document.createElement('li');
-    //             const link = document.createElement('a');
-
-    //             link.textContent = microservice.name;
-    //             link.href = microservice.url;
-    //             link.setAttribute('data-id', microservice._id);
-    //             link.classList.add('microservice-item');
-
-    //             listItem.classList.add('microservice-item');
-
-    //             listItem.appendChild(link);
-    //             projectsList.appendChild(listItem);
-    //         })
-    //       // Handle the response data from the backend
-    //       console.log(data);
-    //     //   alert('Collections retrieved successfully. Check the console for details.');
-    //     })
-    //     .catch(error => {
-    //       console.error('Error:', error);
-    //       alert('Error fetching collections. Check the console for details.');
-    //     });
-
-    fetchFrontendPing();
 
   </script>
 </body>
