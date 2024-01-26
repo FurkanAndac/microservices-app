@@ -145,6 +145,26 @@
         margin-bottom: 0; /* Remove margin between buttons on desktop */
       }
     }
+
+    #addMemberBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #3498db;
+      color: #fff;
+      padding: 10px 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    #addMemberBtn:hover {
+      background-color: #2980b9;
+    }
+
   </style>
 </head>
 <body>
@@ -157,6 +177,7 @@
       </label>
       <span id="productionModeLabel">Production Mode</span>
   </div> 
+  <button id="addMemberBtn" onclick="addMember()">Members page</button>
 
   <h1>Microservice Projects</h1>
   <ul id="projects-list"></ul>
@@ -207,6 +228,16 @@ const toggleProductionMode = () => {
   fetchMicroservices();
 };
 
+const addMember = () => {
+    // Functionality to add a member goes here
+    // You can use prompt or another method to get member details
+    showMembersPage();
+  };
+
+      // Function to switch to the "Members" page
+  const showMembersPage = () => {
+    window.location.href = 'members.html';
+  };
 // Function to fetch frontend ping results
 const fetchFrontendPing = () => {
   currentMicroservices = [];
@@ -245,9 +276,9 @@ microservicesData.forEach(element => {
 pingData.microserviceLiveResults.forEach(async (result, index) => {
   let currentMicroservice = currentMicroservices.find(microservice => microservice.url === result.url);
 
-  // console.log('result:', result);
-  // console.log('result.url:', result.url);
-  // console.log('currentMicroservice:', currentMicroservice);
+  console.log('result:', result);
+  console.log('result.url:', result.url);
+  console.log('currentMicroservice:', currentMicroservice);
 
   let buttonIndex = index + 1;
 
@@ -267,7 +298,7 @@ pingData.microserviceLiveResults.forEach(async (result, index) => {
   if (button) {
     // Check if the microservice is live
     const microserviceLive = result.microserviceLive;
-
+    console.log("test1", microserviceLive)
     // Change button color based on microserviceLive value
     button.style.backgroundColor = microserviceLive ? 'green' : 'red';
     button.style.color = 'white'; // Adjust text color as needed

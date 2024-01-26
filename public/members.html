@@ -1,0 +1,322 @@
+<!-- members.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members</title>
+  <style>
+
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      position: relative;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #monitorPage {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #3498db;
+      color: #fff;
+      padding: 10px 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    #monitorPage:hover {
+      background-color: #2980b9;
+    }
+
+    #memberButtons {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+    }
+
+    #addMember, #deleteMember {
+      display: inline-block;
+      padding: 10px 16px;
+      font-size: 16px;
+      text-decoration: none;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      margin-right: 10px;
+    }
+
+    #addMember {
+      background-color: #3498db;
+    }
+
+    #deleteMember {
+      background-color: red;
+    }
+
+    #addMember:hover, #deleteMember:hover {
+      background-color: #2980b9;
+    }
+
+    table {
+      width: 80%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <button id="monitorPage" onclick="goToMonitorPage()">Monitor page</button>
+  <h1>Members Page</h1>
+
+  <!-- Add Member and Delete Member buttons in the top right corner -->
+  <div id="memberButtons">
+    <button id="addMember" onclick="addMember()">Add Member</button>
+    <button id="deleteMember" onclick="deleteMember()">Delete Member</button>
+  </div>
+
+  <!-- Table for displaying members -->
+  <table id="clientsTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Sample data - replace with dynamic data from your backend -->
+      <!-- Add more rows as needed -->
+    </tbody>
+  </table>
+
+  <script>
+    const clientId = '65ae9f8a0a21b787ee3c9745'; // Replace with a valid client identifier
+    const apiUrlgetMicroservices = 'https://microservices-backend-e5ae0dbc81b5.herokuapp.com/api/microservices';
+    const apiUrl = 'https://microservices-backend-e5ae0dbc81b5.herokuapp.com';
+    // const apiUrlgetMicroservices = 'http://localhost:5000/api/microservices'
+    // const apiUrl = 'http://localhost:5000'
+    
+    function goToMonitorPage() {
+      // Add logic to navigate to the monitor page
+      window.location.href = 'index.html';
+    }
+
+    async function addMember() {
+        const newMemberEmail = prompt('Enter the email of the new member:');
+    
+    if (!newMemberEmail) {
+      // User canceled or entered an empty email
+      return;
+    }
+
+    try {
+      // Make a GET request to fetch the client data by email
+      const response = await fetch(`${apiUrl}/api/clients/${clientId}?memberEmail=${newMemberEmail}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Other headers as needed
+          'X-Client-Id': clientId,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      console.log(response)
+      // Parse the response data
+      const data = await response.json();
+
+      // Check if the client with the given email exists
+      if (data.length === 0) {
+        alert('Client not found with the provided email.');
+        return;
+      }
+      console.log(data)
+      // Add a new row to the table with the data of the found client
+      addTableRow(data.updatedClient);
+    } catch (error) {
+      console.error('Error fetching client by email:', error);
+      // Optional: Display an error message
+      alert('Error fetching client by email. Check the console for details.');
+    }
+  }
+  // Function to add a new row to the table with client data
+  function addTableRow(client) {
+    const table = document.getElementById('clientsTable');
+
+    // Create a new row for the added member
+    const newRow = table.insertRow();
+    const cellName = newRow.insertCell(0);
+    const cellEmail = newRow.insertCell(1);
+    const cellStatus = newRow.insertCell(2);
+
+    // Populate cells with client data
+    cellName.innerHTML = client.name;
+    cellEmail.innerHTML = client.members.length > 0 ? client.members[client.members.length - 1] : 'No members'; // Display the last member or a default message
+    cellStatus.innerHTML = 'Member'; // You may adjust this based on your data model
+
+    // Optional: Highlight the new row
+    newRow.style.backgroundColor = '#aaffaa';
+  }
+
+    async function deleteMember() {
+      // Add logic to handle deleting a member
+      const email = prompt("enter the email you want to delete")
+      deleteRowByEmail(email); // Replace with the email you want to delete
+
+    try {
+      const response = await fetch(`${apiUrl}/api/clients/${clientId}?memberEmail=${email}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-Id': clientId,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error);
+      }
+
+      const result = await response.json();
+      console.log(result); // You can handle the result as needed
+
+      // Refresh the table or update the UI after deletion
+      // For example, you can call a function to fetch and display clients again
+      await fetchAndDisplayClients();
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      // Handle the error as needed (show a message, log, etc.)
+    }
+      alert('Deleting a member.', email);
+
+    }
+
+    // Function to delete a row from the table based on email
+function deleteRowByEmail(email) {
+  const table = document.getElementById('clientsTable');
+  const rows = table.rows;
+
+  // Iterate over table rows starting from the second row (skipping the header row)
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const cellEmail = row.cells[1]; // Assuming email is in the second cell
+
+    // Check if the email in the current row matches the specified email
+    if (cellEmail.innerHTML === email) {
+      table.deleteRow(i); // Delete the row if email matches
+      document.getElementById('deleteMember').style.backgroundColor = 'red';
+
+      return; // Exit the function after deleting the row
+    }
+  }
+
+  // If no matching email is found, display an alert
+  alert('Email not found.');
+}
+
+    // Function to make a GET request to the microservices API
+async function getclients(clientId) {
+  try {
+    const response = await fetch(`${apiUrl}/api/clients`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-Id': clientId,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching clients:', error);
+    throw new Error('Error fetching clients. Check the console for details.');
+  }
+}
+// Function to populate the table with clients data
+function populateTable(data) {
+  const table = document.getElementById('clientsTable');
+
+  // Clear existing rows
+  table.innerHTML = '';
+
+  // Create table header
+  const headerRow = table.insertRow(0);
+  const headers = ['Name', 'Email', 'Status']; // Add or modify headers as needed
+
+  headers.forEach(headerText => {
+    const header = document.createElement('th');
+    header.innerHTML = headerText;
+    headerRow.appendChild(header);
+  });
+
+  // Create table rows
+  data[0].members.forEach(client => {
+    index = 0
+    const row = table.insertRow();
+    const cellName = row.insertCell(0);
+    const cellEmail = row.insertCell(1);
+    const cellStatus = row.insertCell(2); // Add or remove cells as needed
+
+    // Populate cells with client data
+    cellName.innerHTML = data[0].name;
+    console.log(client)
+    // Assuming emails is an array of strings
+
+    cellEmail.innerHTML = client;
+
+    cellStatus.innerHTML = client.status; // Use the actual field from your data
+
+    // Add additional cells as needed
+  });
+}
+
+
+window.onload = function() {
+  getclients(clientId)
+    .then(data => {
+      console.log('Clients data:', data);
+      populateTable(data);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      // Handle the error as needed
+    });
+};
+
+  </script>
+</body>
+</html>
