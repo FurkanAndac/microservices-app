@@ -149,7 +149,7 @@
     #addMemberBtn {
       position: absolute;
       top: 10px;
-      left: 10px;
+      left: 90px;
       background-color: #3498db;
       color: #fff;
       padding: 10px 16px;
@@ -165,6 +165,33 @@
       background-color: #2980b9;
     }
 
+    /* Style for the login button */
+    #loginLogoutButton {
+    position: fixed;
+    top: 10px;
+    left: 10px; /* Adjusted to the left */
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px; /* Added margin to the right */
+}
+
+/* Style for the setCookieBtn button */
+#setCookieBtn {
+    position: fixed;
+    top: 10px;
+    left: 230px; /* Adjusted to the left */
+    padding: 10px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
   </style>
 </head>
 <body>
@@ -176,18 +203,24 @@
         <span class="slider round"></span>
       </label>
       <span id="productionModeLabel">Production Mode</span>
+
   </div> 
+  <button id="loginLogoutButton" onclick="toggleLoginLogout()">Login</button>
   <button id="addMemberBtn" onclick="addMember()">Members page</button>
+  <!-- <button id="setCookieBtn" onclick="setCookie()">setCookie</button> -->
+  <!-- <button id="logoutButton" onclick="logout()">Logout</button> -->
+
+
 
   <h1>Microservice Projects</h1>
   <ul id="projects-list"></ul>
 
   <script>
     const clientId = '65ae9f8a0a21b787ee3c9745'; // Replace with a valid client identifier
-    const apiUrlgetMicroservices = 'https://microservices-backend-e5ae0dbc81b5.herokuapp.com/api/microservices';
-    const apiUrl = 'https://microservices-backend-e5ae0dbc81b5.herokuapp.com';
-    // const apiUrlgetMicroservices = 'http://localhost:5000/api/microservices'
-    // const apiUrl = 'http://localhost:5000'
+    // const apiUrlgetMicroservices = 'https://microservices-backend-e5ae0dbc81b5.herokuapp.com/api/microservices';
+    // const apiUrl = 'https://microservices-backend-e5ae0dbc81b5.herokuapp.com';
+    const apiUrlgetMicroservices = 'http://localhost:5000/api/microservices'
+    const apiUrl = 'http://localhost:5000'
 
     let deleteMode = false; // Flag to indicate if in delete mode
     let productionMode = false; // Flag to indicate production mode
@@ -227,6 +260,23 @@ const toggleProductionMode = () => {
   alert(`Production mode is ${productionMode ? 'on' : 'off'}.`);
   fetchMicroservices();
 };
+// const setCookie = async () => {
+//   try {
+//     const response = await fetch(apiUrl + '/api/cookies/set-cookie', {
+//       method: 'POST',
+//       credentials: 'include', // Important for including cookies
+//     });
+
+//     if (!response.ok) {
+//       throw new Error(`Failed to set cookie. Status: ${response.status}`);
+//     }
+
+//     const message = await response.text();
+//     console.log('Response:', message);
+//   } catch (error) {
+//     console.error('Error setting cookie:', error.message);
+//   }
+// };
 
 const addMember = () => {
     // Functionality to add a member goes here
@@ -234,89 +284,133 @@ const addMember = () => {
     showMembersPage();
   };
 
+  const login = () => {
+    window.location.href = 'login.html'
+  }
+
+  const logout = async (req, res) => {
+      try {
+        console.log("start logout sequence")
+        // Fetch the logout endpoint with the authentication token
+        const authToken = getCookie('jwtToken'); // Assuming you have a function to get the token
+        console.log(authToken)
+        const response = await fetch(`${apiUrl}/api/clients/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,  // Include 'Bearer ' prefix
+          },
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to logout. Status: ${response.status}`);
+        }
+        document.cookie = 'jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+        // Handle successful logout
+        console.log('Logout successful');
+        // You might want to redirect to the login page or update UI accordingly
+        window.location.href = 'login.html'
+        // res.status(200).json({succes: true})
+      } catch (error) {
+        console.error('Error logging out:', error);
+        // Handle errors, such as displaying an error message to the user
+      }
+    };
       // Function to switch to the "Members" page
   const showMembersPage = () => {
     window.location.href = 'members.html';
   };
 // Function to fetch frontend ping results
-const fetchFrontendPing = () => {
-  currentMicroservices = [];
+const fetchFrontendPing = async () => {
+  try {
+    currentMicroservices = [];
+    const authToken = getCookie('jwtToken');
 
-  // Fetch frontend ping results and microservices concurrently
-  Promise.all([
-    fetch(apiUrl +'/api/frontend-ping', { headers: { 'X-Client-Id': clientId } }),
-    fetch(apiUrl+'/api/microservices', { headers: { 'X-Client-Id': clientId } })
-  ])
-    .then(([pingResponse, microservicesResponse]) => Promise.all([pingResponse.json(), microservicesResponse.json()]))
-    .then(([pingData, microservicesData]) => {
-      // console.log('Frontend Ping Results:', pingData);
-      // console.log('Microservices:', microservicesData);
-      // console.log('Production Mode:', productionMode);
+    // Fetch frontend ping results and microservices concurrently
+    const [pingResponse, microservicesResponse] = await Promise.all([
+      fetch(apiUrl + '/api/frontend-ping', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`, // Include 'Bearer ' prefix
+        },
+        credentials: 'include',
+      }),
+      fetch(apiUrl + '/api/microservices', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`, // Include 'Bearer ' prefix
+        },
+        credentials: 'include',
+      }),
+    ]);
 
-      // Check if pingData is an array
-      if (!pingData || !pingData.microserviceLiveResults || !Array.isArray(pingData.microserviceLiveResults)) {
-        console.error('Error: Invalid frontend ping results structure.');
-        console.error('Received data:', pingData);
+    const [pingData, microservicesData] = await Promise.all([
+      pingResponse.json(),
+      microservicesResponse.json(),
+    ]);
+
+    // Check if pingData is an array
+    if (!pingData || !pingData.microserviceLiveResults || !Array.isArray(pingData.microserviceLiveResults)) {
+      console.error('Error: Invalid frontend ping results structure.');
+      console.error('Received data:', pingData);
+      return;
+    }
+
+    // Filter and add microservices to currentMicroservices based on production mode
+    microservicesData.forEach(element => {
+      // Check if the microservice's production mode matches the desired mode
+      if (element.production === productionMode) {
+        currentMicroservices.push(element);
+      }
+    });
+
+    // Iterate through each microservice result using map
+    const results = await Promise.all(pingData.microserviceLiveResults.map(async (result, index) => {
+      let currentMicroservice = currentMicroservices.find(microservice => microservice.url === result.url);
+
+      console.log('result:', result);
+      console.log('result.url:', result.url);
+      console.log('currentMicroservice:', currentMicroservice);
+
+      let buttonIndex = index + 1;
+
+      // Skip the index if currentMicroservice is undefined
+      if (!currentMicroservice) {
+        console.warn(`Skipping index ${buttonIndex} because currentMicroservice is undefined.`);
         return;
       }
 
-     // Filter and add microservices to currentMicroservices based on production mode
-microservicesData.forEach(element => {
-  // Check if the microservice's production mode matches the desired mode
-  if (element.production === productionMode) {
-    currentMicroservices.push(element);
+      // Create a selector based on microserviceId
+      const buttonSelector = `#projects-list .microservice-item[data-id="${currentMicroservice._id}"]`;
+
+      // Find the button corresponding to the microservice
+      const button = document.querySelector(buttonSelector);
+
+      // Check if the button is found
+      if (button) {
+        // Check if the microservice is live
+        const microserviceLive = result.microserviceLive;
+        console.log("test1", microserviceLive)
+        // Change button color based on microserviceLive value
+        button.style.backgroundColor = microserviceLive ? 'green' : 'red';
+        button.style.color = 'white'; // Adjust text color as needed
+
+        // Use microserviceId as needed
+        const microserviceId = currentMicroservice._id;
+        // console.log('Microservice ID:', microserviceId);
+
+        return { button, microserviceLive };
+      } else {
+        console.error(`Button not found for microservice with _id ${currentMicroservice._id}.`);
+        return null;
+      }
+    }));
+
+    // results contains an array of objects with button and microserviceLive properties
+    console.log(results);
+  } catch (error) {
+    console.error('Error fetching frontend ping data:', error);
   }
-});
-
-// console.log('Current Microservices:', currentMicroservices);
-
-  // console.log('Current Microservices:', currentMicroservices);
-
-      // Iterate through each microservice result
-pingData.microserviceLiveResults.forEach(async (result, index) => {
-  let currentMicroservice = currentMicroservices.find(microservice => microservice.url === result.url);
-
-  console.log('result:', result);
-  console.log('result.url:', result.url);
-  console.log('currentMicroservice:', currentMicroservice);
-
-  let buttonIndex = index + 1;
-
-  // Skip the index if currentMicroservice is undefined
-  if (!currentMicroservice) {
-    console.warn(`Skipping index ${buttonIndex} because currentMicroservice is undefined.`);
-    return;
-  }
-
-  // Create a selector based on microserviceId
-  const buttonSelector = `#projects-list .microservice-item[data-id="${currentMicroservice._id}"]`;
-
-  // Find the button corresponding to the microservice
-  const button = document.querySelector(buttonSelector);
-
-  // Check if the button is found
-  if (button) {
-    // Check if the microservice is live
-    const microserviceLive = result.microserviceLive;
-    console.log("test1", microserviceLive)
-    // Change button color based on microserviceLive value
-    button.style.backgroundColor = microserviceLive ? 'green' : 'red';
-    button.style.color = 'white'; // Adjust text color as needed
-
-    // Use microserviceId as needed
-    const microserviceId = currentMicroservice._id;
-    // console.log('Microservice ID:', microserviceId);
-  } else {
-    console.error(`Button not found for microservice with _id ${currentMicroservice._id}.`);
-  }
-});
-
-
-    })
-    .catch(error => {
-      console.error('Error fetching data:', error);
-      alert('Error fetching data. Check the console for details.');
-    });
 };
 
 // Call fetchFrontendPing every 15 seconds
@@ -326,14 +420,37 @@ setInterval(fetchFrontendPing, 15000);
     // Attach event listener to the toggle switch
     document.getElementById('productionToggle').addEventListener('change', toggleProductionMode);
 
+    function getCookie(name) {
+  const cookies = document.cookie.split(';');
+        console.log(cookies)
+  for (const cookie of cookies) {
+    const [cookieName, cookieValue] = cookie.split('=').map(c => c.trim());
+
+    if (cookieName === name) {
+      console.log('Retrieved Token:', cookieValue);
+      return cookieValue;
+    }
+  }
+
+  return null;
+}
+
     const fetchMicroservices = () => {
+      
+
+// Retrieve the Authorization token from the cookie
+const authToken = getCookie('jwtToken');
+
+// Now you can use authToken in your requests
+console.log('Authorization Token:', authToken);
   // Fetch the list of microservices and dynamically create links
   fetch(`${apiUrlgetMicroservices}?production=${productionMode}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'X-Client-ID': clientId,
+      'Authorization': `Bearer ${authToken}`, // Include 'Bearer ' prefix
     },
+    credentials: 'include',
   })
   .then(response => {
       if (!response.ok) {
@@ -383,6 +500,8 @@ fetchMicroservices();
 
 
 document.addEventListener('click', (event) => {
+  const authToken = getCookie('jwtToken');
+
       const clickedElement = event.target;
 
       console.log('Clicked element:', clickedElement);
@@ -400,8 +519,9 @@ document.addEventListener('click', (event) => {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'X-Client-ID': clientId,
-          },
+            'Authorization': `Bearer ${authToken}`, // Include 'Bearer ' prefix
+    },
+    credentials: 'include',
         })
           .then(response => response.json())
           .then(data => {
@@ -420,6 +540,7 @@ document.addEventListener('click', (event) => {
     fetchMicroservices();
 
     const addMicroservice = () => {
+  const authToken = getCookie('jwtToken');
   const name = prompt('Enter microservice name:');
   let url = prompt('Enter microservice URL:');
 
@@ -433,7 +554,6 @@ document.addEventListener('click', (event) => {
     const postData = {
       name: name,
       url: url,
-      client: clientId, // Include the client ID
       production: productionMode, // Get the current state of the productionMode
     };
 
@@ -443,8 +563,9 @@ document.addEventListener('click', (event) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Client-ID': clientId,
-      },
+        'Authorization': `Bearer ${authToken}`, // Include 'Bearer ' prefix
+    },
+    credentials: 'include',
       body: JSON.stringify(postData),
     })
       .then(response => response.json())
@@ -462,6 +583,53 @@ document.addEventListener('click', (event) => {
       });
   }
 };
+
+        // Function to toggle between login and logout
+        const toggleLoginLogout = () => {
+            const isLoggedIn = checkLoginStatus();
+
+            if (isLoggedIn) {
+                // If the user is logged in, perform logout actions
+                performLogout();
+            } else {
+                // If the user is not logged in, redirect to the login page
+                window.location.href = 'login.html';
+            }
+        };
+
+        // Function to perform logout actions
+        const performLogout = () => {
+            // You may need to send a request to your logout API endpoint
+            // to invalidate the current session or perform any necessary cleanup.
+            logout()
+            // For demonstration, simply reload the page
+            // location.reload();
+        };
+
+        // Function to check the user's login status
+        const checkLoginStatus = () => {
+            // Implement your logic to check the user's login status here.
+            // For example, you can check the existence of a session cookie.
+
+            // For demonstration, assume a session cookie named 'userSession'
+            return document.cookie.includes('jwtToken');
+        };
+
+        // Function to update the login/logout button based on the user's status
+        const updateLoginLogoutButton = () => {
+            const loginLogoutButton = document.getElementById('loginLogoutButton');
+
+            if (checkLoginStatus()) {
+                // If the user is logged in, change the button to "Logout"
+                loginLogoutButton.textContent = 'Logout';
+            } else {
+                // If the user is not logged in, change the button to "Login"
+                loginLogoutButton.textContent = 'Login';
+            }
+        };
+
+        // Call the function to update the button status when the page loads
+        updateLoginLogoutButton();
 
   </script>
 </body>

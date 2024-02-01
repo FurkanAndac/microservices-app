@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration</title>
+    <!-- Add any additional styles or external CSS links here -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<form id="registerForm">
+    <h2>Signup</h2>
+    
+    <label for="username">Username:</label>
+    <input type="name" id="name" name="name" required>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+
+    <label for="password">Create Password:</label>
+    <input type="password" id="password" name="password" required>
+
+    <label for="confirmPassword">Confirm Password:</label>
+    <input type="password" id="confirmPassword" name="confirmPassword" required>
+
+    <button type="submit">Signup</button>
+</form>
+
+<!-- Add any additional scripts or external JavaScript links here -->
+<script>
+    const apiUrl = 'http://localhost:5000' 
+
+    document.getElementById('registerForm').addEventListener('submit', async function (event) {
+    event.preventDefault();
+    const username = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    // Check if the create password and confirm password values match
+    if (password !== confirmPassword) {
+        alert('Create Password and Confirm Password must match.');
+        return;
+    }
+
+    // Perform basic email format validation using a regular expression
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Invalid email format. Please enter a valid email address.');
+        return;
+    }
+
+    // Prepare the data to be sent in the POST request
+    const data = {
+        name: username,
+        email: email,
+        password: password,
+    };
+
+    try {
+        const response = await fetch(apiUrl + '/api/clients/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (response.ok) {
+            // Registration successful, handle the response as needed
+            const responseData = await response.json();
+            console.log('Registration successful:', responseData);
+
+            // Attempt to log in the user after registration
+            const responseLogin = await fetch(apiUrl + '/api/clients/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (responseLogin.ok) {
+                // Login successful, handle the response as needed
+                const responseLoginData = await responseLogin.json();
+                console.log('Token:', responseLoginData.token);
+                await setCookie(responseLoginData.token);
+                console.log('Logging in successful:', responseLoginData);
+                // Redirect or perform other actions after successful login
+                window.location.href = 'index.html';
+            } else {
+                // Handle login failure
+                console.error('Login failed after registration:', responseLogin.statusText);
+                alert('Login failed after registration. Please try logging in manually.');
+            }
+        } else {
+            // Handle registration failure
+            console.error('Registration failed:', response.statusText);
+            alert('Registration failed. Please check your input.');
+        }
+    } catch (error) {
+        console.error('Error during registration:', error);
+        alert('An unexpected error occurred during registration.');
+    }
+});
+    // API call to set a cookie
+async function setCookie(token) {
+    try {
+        const setCookieResponse = await fetch(apiUrl+'/api/cookies/set-cookie', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
+        });
+        document.cookie = "jwtToken="+ token
+        if (setCookieResponse.ok) {
+            console.log('Cookie set successfully.');
+        } else {
+            console.error('Failed to set cookie:', setCookieResponse.statusText);
+        }
+    } catch (error) {
+        console.error('Error during setCookie API call:', error);
+    }
+}
+</script>
+
+</body>
+</html>
