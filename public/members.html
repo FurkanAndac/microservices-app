@@ -162,7 +162,7 @@
         alert('Client not found with the provided email.');
         return;
       }
-      console.log(data)
+      console.log("data:"+data.updatedClient)
       // Add a new row to the table with the data of the found client
       addTableRow(data.updatedClient);
     } catch (error) {
@@ -173,18 +173,26 @@
   }
   // Function to add a new row to the table with client data
   function addTableRow(client) {
+    console.log("client: "+client.members)
     const table = document.getElementById('clientsTable');
+
+    const recentlyAddedMember = client.members[client.members.length - 1];
 
     // Create a new row for the added member
     const newRow = table.insertRow();
     const cellName = newRow.insertCell(0);
     const cellEmail = newRow.insertCell(1);
-    const cellStatus = newRow.insertCell(2);
+    const cellRole = newRow.insertCell(2);
 
     // Populate cells with client data
-    cellName.innerHTML = client.name;
-    cellEmail.innerHTML = client.members.length > 0 ? client.members[client.members.length - 1] : 'No members'; // Display the last member or a default message
-    cellStatus.innerHTML = 'Member'; // You may adjust this based on your data model
+    // cellName.innerHTML = client.name;
+    // cellEmail.innerHTML = client.email
+    // // cellEmail.innerHTML = client.members.length > 0 ? client.members[client.members.length - 1] : 'No members'; // Display the last member or a default message
+    // cellRole.innerHTML = client.role; // You may adjust this based on your data model
+
+    cellName.innerHTML = recentlyAddedMember.name;
+    cellEmail.innerHTML = recentlyAddedMember.email; // Adjust as per your data model
+    cellRole.innerHTML = recentlyAddedMember.role; // Adjust as per your data model
 
     // Optional: Highlight the new row
     newRow.style.backgroundColor = '#aaffaa';
@@ -282,7 +290,7 @@ function populateTable(data) {
 
   // Create table header
   const headerRow = table.insertRow(0);
-  const headers = ['Name', 'Email', 'Status']; // Add or modify headers as needed
+  const headers = ['Name', 'Email', 'Role']; // Add or modify headers as needed
 
   headers.forEach(headerText => {
     const header = document.createElement('th');
@@ -296,16 +304,16 @@ function populateTable(data) {
     const row = table.insertRow();
     const cellName = row.insertCell(0);
     const cellEmail = row.insertCell(1);
-    const cellStatus = row.insertCell(2); // Add or remove cells as needed
+    const cellRole = row.insertCell(2); // Add or remove cells as needed
 
     // Populate cells with client data
-    cellName.innerHTML = data[0].name;
+    cellName.innerHTML = client.name;
     console.log(client)
     // Assuming emails is an array of strings
 
-    cellEmail.innerHTML = client;
+    cellEmail.innerHTML = client.email;
 
-    cellStatus.innerHTML = client.status; // Use the actual field from your data
+    cellRole.innerHTML = client.role; // Use the actual field from your data
 
     // Add additional cells as needed
   });

@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <!-- Link Font Awesome CSS -->
+    <script src="https://kit.fontawesome.com/f1e23abf32.js" crossorigin="anonymous"></script>    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Registration</title>
     <!-- Add any additional styles or external CSS links here -->
@@ -22,6 +23,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 500px;
         }
 
         label {
@@ -46,6 +48,47 @@
             border-radius: 4px;
             cursor: pointer;
         }
+
+   /* Style for circular radio buttons */
+   input[type="radio"] {
+        display: none;
+    }
+
+    label.radio-container {
+        display: inline-block;
+        position: relative;
+        padding-left: 30px;
+        margin-right: 15px;
+        margin-bottom: 20px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    label.radio-container:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border: 2px solid green; /* Border color */
+        border-radius: 50%; /* Make it circular */
+    }
+
+    input[type="radio"]:checked + label.radio-container:before {
+        background-color: green; /* Circle color when selected */
+        border-color: green;
+    }
+
+        /* Style for information icon */
+        label.radio-container .info-btn {
+        display: inline-block;
+        margin-left: 5px; /* Add margin for spacing */
+        font-size: 14px;
+        cursor: help;
+        color: #2196F3; /* Set the color to match the circle */
+    }
+    
     </style>
 </head>
 <body>
@@ -59,13 +102,28 @@
     <label for="email">Email:</label>
     <input type="email" id="email" name="email" required>
 
+    <!-- Admin radio button is checked by default -->
+    <input type="radio" id="admin" name="role" value="admin" checked required>
+    <label class="radio-container" for="admin">Admin <span class="info-btn" title="Admins have full access and control. For only $49 dollars a month an admin has the ability to add/delete microservices to their private monitor aswell as add/delete teammembers. The first month is a trial period in which case its completely FREE! "><i class="fa-solid fa-circle-info fa-1x"></i></span></label>
+
+    <input type="radio" id="teamMember" name="role" value="teamMember" required>
+    <label class="radio-container" for="teamMember">Team Member <span class="info-btn" title="Team Members have limited access. As a teammember you need an admin to add you to the list of members that can visit the monitor webpage. Being a teammember has no additional costs, it's completely FREE! "><i class="fa-solid fa-circle-info fa-1x"></i></span></label>
+
     <label for="password">Create Password:</label>
     <input type="password" id="password" name="password" required>
 
     <label for="confirmPassword">Confirm Password:</label>
     <input type="password" id="confirmPassword" name="confirmPassword" required>
+   
 
-    <button type="submit">Signup</button>
+
+
+    <div>
+        <button type="submit">Signup</button>
+
+        <a href="login.html">Already have an account? Click here</a>
+    </div>
+
 </form>
 
 <!-- Add any additional scripts or external JavaScript links here -->
@@ -78,7 +136,9 @@
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-
+    // Check which radio button is selected
+    const role = document.querySelector('input[name="role"]:checked').value;
+    
     // Check if the create password and confirm password values match
     if (password !== confirmPassword) {
         alert('Create Password and Confirm Password must match.');
@@ -97,6 +157,7 @@
         name: username,
         email: email,
         password: password,
+        role: role,
     };
 
     try {
@@ -138,7 +199,7 @@
         } else {
             // Handle registration failure
             console.error('Registration failed:', response.statusText);
-            alert('Registration failed. Please check your input.');
+            alert('Registration failed. This email is already in use.');
         }
     } catch (error) {
         console.error('Error during registration:', error);

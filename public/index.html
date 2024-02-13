@@ -278,6 +278,44 @@ const toggleProductionMode = () => {
 //   }
 // };
 
+function getUserRole() {
+  const authToken = getCookie('jwtToken');
+  if (!authToken) {
+    return null;
+  }
+
+  try {
+    const tokenPayload = authToken.split('.')[1];
+    const decodedPayload = atob(tokenPayload);
+    const { role } = JSON.parse(decodedPayload);
+    return role;
+  } catch (error) {
+    console.error('Error decoding JWT token:', error);
+    return null;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const userRole = getUserRole();
+  const addMemberBtn = document.getElementById('addMemberBtn');
+  const addMicroserviceBtn = document.getElementById('addMicroservice');
+  const deleteMicroserviceBtn = document.getElementById('deleteMicroserviceBtn');
+
+  if (userRole === 'teamMember') {
+    // Hide buttons for team members
+    addMemberBtn.style.display = 'none';
+    addMicroserviceBtn.style.display = 'none';
+    deleteMicroserviceBtn.style.display = 'none';
+  } else {
+    // Show buttons for other roles
+    addMemberBtn.style.display = 'inline-block';
+    addMicroserviceBtn.style.display = 'inline-block';
+    deleteMicroserviceBtn.style.display = 'inline-block';
+  }
+
+  // Rest of your code...
+});
+
 const addMember = () => {
     // Functionality to add a member goes here
     // You can use prompt or another method to get member details
@@ -353,6 +391,9 @@ const fetchFrontendPing = async () => {
     if (!pingData || !pingData.microserviceLiveResults || !Array.isArray(pingData.microserviceLiveResults)) {
       console.error('Error: Invalid frontend ping results structure.');
       console.error('Received data:', pingData);
+      if (pingData.error === "Invalid token.") {
+        window.location.href = 'login.html'
+      }
       return;
     }
 
@@ -584,52 +625,53 @@ document.addEventListener('click', (event) => {
   }
 };
 
-        // Function to toggle between login and logout
-        const toggleLoginLogout = () => {
-            const isLoggedIn = checkLoginStatus();
+// Function to toggle between login and logout
+const toggleLoginLogout = () => {
+    const isLoggedIn = checkLoginStatus();
 
-            if (isLoggedIn) {
-                // If the user is logged in, perform logout actions
-                performLogout();
-            } else {
-                // If the user is not logged in, redirect to the login page
-                window.location.href = 'login.html';
-            }
-        };
+    if (isLoggedIn) {
+        // If the user is logged in, perform logout actions
+        performLogout();
+    } else {
+        // If the user is not logged in, redirect to the login page
+        window.location.href = 'login.html';
+    }
+};
 
-        // Function to perform logout actions
-        const performLogout = () => {
-            // You may need to send a request to your logout API endpoint
-            // to invalidate the current session or perform any necessary cleanup.
-            logout()
-            // For demonstration, simply reload the page
-            // location.reload();
-        };
+// Function to perform logout actions
+const performLogout = () => {
+    // You may need to send a request to your logout API endpoint
+    // to invalidate the current session or perform any necessary cleanup.
+    logout()
+    // For demonstration, simply reload the page
+    // location.reload();
+};
 
-        // Function to check the user's login status
-        const checkLoginStatus = () => {
-            // Implement your logic to check the user's login status here.
-            // For example, you can check the existence of a session cookie.
+// Function to check the user's login status
+const checkLoginStatus = () => {
+    // Implement your logic to check the user's login status here.
+    // For example, you can check the existence of a session cookie.
 
-            // For demonstration, assume a session cookie named 'userSession'
-            return document.cookie.includes('jwtToken');
-        };
+    // For demonstration, assume a session cookie named 'userSession'
+    return document.cookie.includes('jwtToken');
+};
 
-        // Function to update the login/logout button based on the user's status
-        const updateLoginLogoutButton = () => {
-            const loginLogoutButton = document.getElementById('loginLogoutButton');
+// Function to update the login/logout button based on the user's status
+const updateLoginLogoutButton = () => {
+    const loginLogoutButton = document.getElementById('loginLogoutButton');
 
-            if (checkLoginStatus()) {
-                // If the user is logged in, change the button to "Logout"
-                loginLogoutButton.textContent = 'Logout';
-            } else {
-                // If the user is not logged in, change the button to "Login"
-                loginLogoutButton.textContent = 'Login';
-            }
-        };
+    if (checkLoginStatus()) {
+        // If the user is logged in, change the button to "Logout"
+        loginLogoutButton.textContent = 'Logout';
+    } else {
+        // If the user is not logged in, change the button to "Login"
+        loginLogoutButton.textContent = 'Login';
+    }
+};
 
-        // Call the function to update the button status when the page loads
-        updateLoginLogoutButton();
+
+// Call the function to update the button status when the page loads
+updateLoginLogoutButton();
 
   </script>
 </body>
